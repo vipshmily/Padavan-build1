@@ -17,6 +17,9 @@ CONFIG_KUMASOCKS_FILE=/tmp/kumasocks.toml
 v2_json_file="/tmp/v2-redir.json"
 xray_json_file="/tmp/xr-redir.json"
 trojan_json_file="/tmp/tj-redir.json"
+v2_bin="/usr/bin/v2ray"
+xr_bin="/usr/bin/xray"
+tj_bin="/usr/bin/trojan"
 server_count=0
 redir_tcp=0
 v2ray_enable=0
@@ -42,9 +45,9 @@ find_bin() {
 	ssr) ret="/usr/bin/ssr-redir" ;;
 	ssr-local) ret="/usr/bin/ssr-local" ;;
 	ssr-server) ret="/usr/bin/ssr-server" ;;
-	v2ray) ret="/usr/bin/v2ray" ;;
-	xray) ret="/usr/bin/xray" ;;
-	trojan) ret="/usr/bin/trojan" ;;
+	v2ray) ret="$v2_bin" ;;
+	xray) ret="$xr_bin" ;;
+	trojan) ret="$tj_bin" ;;
 	socks5) ret="/usr/bin/ipt2socks" ;;
 	esac
 	echo $ret
@@ -72,11 +75,19 @@ local type=$stype
 		tj_bin="/usr/bin/trojan"
 		if [ ! -f "$tj_bin" ]; then
 		if [ ! -f "/tmp/trojan" ];then
-			curl -k -s -o /tmp/trojan --connect-timeout 10 --retry 3 https://cdn.jsdelivr.net/gh/vipshmily/OutSide/trojan/trojan
+			curl -k -s -o /tmp/trojan --connect-timeout 10 --retry 3 https://cdn.jsdelivr.net/gh/vipshmily/OutSide/trojan
 			if [ ! -f "/tmp/trojan" ]; then
-				logger -t "SS" "trojan二进制文件下载失败，可能是地址失效或者网络异常！"
+				logger -t "SS" "trojan二进制文件下载失败，可能是地址失效或者网络异常！自动切换到备用下载！"
+			curl -L -k -s -o /tmp/trojan --connect-timeout 10 --retry 3 https://ghproxy.com/https://github.com/vipshmily/OutSide/blob/main/trojan
+			if [ ! -f "/tmp/trojan" ]; then
+			        logger -t "SS" "trojan二进制文件备用下载失败！请自查网络！"
 				nvram set ss_enable=0
 				ssp_close
+			else
+				logger -t "SS" "trojan二进制文件备用下载成功"
+				chmod -R 777 /tmp/trojan
+				tj_bin="/tmp/trojan"
+			fi
 			else
 				logger -t "SS" "trojan二进制文件下载成功"
 				chmod -R 777 /tmp/trojan
@@ -99,11 +110,19 @@ local type=$stype
 		v2_bin="/usr/bin/v2ray"
 		if [ ! -f "$v2_bin" ]; then
 		if [ ! -f "/tmp/v2ray" ];then
-			curl -k -s -o /tmp/v2ray --connect-timeout 10 --retry 3 https://cdn.jsdelivr.net/gh/vipshmily/OutSide/v2ray/v2ray
+			curl -k -s -o /tmp/v2ray --connect-timeout 10 --retry 3 https://cdn.jsdelivr.net/gh/vipshmily/OutSide/xray
 			if [ ! -f "/tmp/v2ray" ]; then
-				logger -t "SS" "v2ray二进制文件下载失败，可能是地址失效或者网络异常！"
+				logger -t "SS" "v2ray二进制文件下载失败，可能是地址失效或者网络异常！自动切换到备用下载！"
+			curl -L -k -s -o /tmp/v2ray --connect-timeout 10 --retry 3 https://ghproxy.com/https://github.com/vipshmily/OutSide/blob/main/xray
+			if [ ! -f "/tmp/v2ray" ]; then
+			        logger -t "SS" "v2ray二进制文件备用下载失败！请自查网络！"
 				nvram set ss_enable=0
 				ssp_close
+			else
+				logger -t "SS" "v2ray二进制文件备用下载成功"
+				chmod -R 777 /tmp/v2ray
+				v2_bin="/tmp/v2ray"
+			fi
 			else
 				logger -t "SS" "v2ray二进制文件下载成功"
 				chmod -R 777 /tmp/v2ray
@@ -126,11 +145,19 @@ local type=$stype
 		xr_bin="/usr/bin/xray"
 		if [ ! -f "$xr_bin" ]; then
 		if [ ! -f "/tmp/xray" ];then
-			curl -k -s -o /tmp/xray --connect-timeout 10 --retry 3 https://cdn.jsdelivr.net/gh/vipshmily/OutSide/xray/xray
+			curl -k -s -o /tmp/xray --connect-timeout 10 --retry 3 https://cdn.jsdelivr.net/gh/vipshmily/OutSide/xray
 			if [ ! -f "/tmp/xray" ]; then
-				logger -t "SS" "xray二进制文件下载失败，可能是地址失效或者网络异常！"
+				logger -t "SS" "xray二进制文件下载失败，可能是地址失效或者网络异常！自动切换到备用下载！"
+			curl -L -k -s -o /tmp/xray --connect-timeout 10 --retry 3 https://ghproxy.com/https://github.com/vipshmily/OutSide/blob/main/xray
+			if [ ! -f "/tmp/xray" ]; then
+			        logger -t "SS" "xray二进制文件备用下载失败！请自查网络！"
 				nvram set ss_enable=0
 				ssp_close
+			else
+				logger -t "SS" "xray二进制文件备用下载成功"
+				chmod -R 777 /tmp/xray
+				xr_bin="/tmp/xray"
+			fi
 			else
 				logger -t "SS" "xray二进制文件下载成功"
 				chmod -R 777 /tmp/xray
@@ -142,11 +169,11 @@ local type=$stype
 		fi
 		xray_enable=1
 		if [ "$2" = "1" ]; then
-		lua /etc_ro/ss/genxrconfig.lua $1 udp 1080 >/tmp/xr-ssr-reudp.json
-		sed -i 's/\\//g' /tmp/xr-ssr-reudp.json
+		lua /etc_ro/ss/genxrayconfig.lua $1 udp 1080 >/tmp/xray-ssr-reudp.json
+		sed -i 's/\\//g' /tmp/xray-ssr-reudp.json
 		else
-		lua /etc_ro/ss/genxrconfig.lua $1 tcp 1080 >$xr_json_file
-		sed -i 's/\\//g' $xr_json_file
+		lua /etc_ro/ss/genxrayconfig.lua $1 tcp 1080 >$xray_json_file
+		sed -i 's/\\//g' $xray_json_file
 		fi
 		;;
 	esac
@@ -276,7 +303,7 @@ start_redir_tcp() {
 		echo "$(date "+%Y-%m-%d %H:%M:%S") $($bin -version | head -1) 启动成功!" >>/tmp/ssrplus.log
 		;;
 	xray)
-		$bin -config $xr_json_file >/dev/null 2>&1 &
+		$bin -config $xray_json_file >/dev/null 2>&1 &
 		echo "$(date "+%Y-%m-%d %H:%M:%S") $($bin -version | head -1) 启动成功!" >>/tmp/ssrplus.log
 		;;
 	socks5)
@@ -310,7 +337,7 @@ start_redir_udp() {
 			;;
 		xray)
 			gen_config_file $UDP_RELAY_SERVER 1
-			$bin -config /tmp/xr-ssr-reudp.json >/dev/null 2>&1 &
+			$bin -config /tmp/xray-ssr-reudp.json >/dev/null 2>&1 &
 			;;
 		trojan)
 			gen_config_file $UDP_RELAY_SERVER 1
@@ -345,11 +372,11 @@ case "$run_mode" in
 		rm -f /tmp/china.ipset
 		if [ $(nvram get ss_chdns) = 1 ]; then
 			chinadnsng_enable_flag=1
-			logger -t "SS" "下载cdn域名文件..."
-			wget --no-check-certificate --timeout=8 -qO - https://gitee.com/bkye/rules/raw/master/cdn.txt > /tmp/cdn.txt
 			if [ ! -f "/tmp/cdn.txt" ]; then
 				logger -t "SS" "cdn域名文件下载失败，可能是地址失效或者网络异常！可能会影响部分国内域名解析了国外的IP！"
 			else
+				logger -t "SS" "下载cdn域名文件..."
+				wget --no-check-certificate --timeout=8 -qO - https://raw.githubusercontent.com/hq450/fancyss/master/rules/cdn.txt > /tmp/cdn.txt
 				logger -t "SS" "cdn域名文件下载成功"
 			fi
 			logger -st "SS" "启动chinadns..."
@@ -438,9 +465,9 @@ start_local() {
 		echo "$(date "+%Y-%m-%d %H:%M:%S") Global_Socks5:$($bin -version | head -1) Started!" >>/tmp/ssrplus.log
 		;;
 	xray)
-		lua /etc_ro/ss/genxrconfig.lua $local_server tcp 0 $s5_port >/tmp/xr-ssr-local.json
-		sed -i 's/\\//g' /tmp/xr-ssr-local.json
-		$bin -config /tmp/xr-ssr-local.json >/dev/null 2>&1 &
+		lua /etc_ro/ss/genxrayconfig.lua $local_server tcp 0 $s5_port >/tmp/xray-ssr-local.json
+		sed -i 's/\\//g' /tmp/xray-ssr-local.json
+		$bin -config /tmp/xray-ssr-local.json >/dev/null 2>&1 &
 		echo "$(date "+%Y-%m-%d %H:%M:%S") Global_Socks5:$($bin -version | head -1) Started!" >>/tmp/ssrplus.log
 		;;
 	trojan)
