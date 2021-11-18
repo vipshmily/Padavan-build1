@@ -15,12 +15,10 @@ CONFIG_UDP_FILE=/tmp/${NAME}_u.json
 CONFIG_SOCK5_FILE=/tmp/${NAME}_s.json
 CONFIG_KUMASOCKS_FILE=/tmp/kumasocks.toml
 v2_json_file="/tmp/v2-redir.json"
-x_json_file="/tmp/x-redir.json"
 trojan_json_file="/tmp/tj-redir.json"
 server_count=0
 redir_tcp=0
 v2ray_enable=0
-xray_enable=0
 redir_udp=0
 tunnel_enable=0
 local_enable=0
@@ -43,7 +41,6 @@ find_bin() {
 	ssr-local) ret="/usr/bin/ssr-local" ;;
 	ssr-server) ret="/usr/bin/ssr-server" ;;
 	v2ray) ret="/usr/bin/v2ray" ;;
-	xray) ret="/usr/bin/xray" ;;
 	trojan) ret="/usr/bin/trojan" ;;
 	socks5) ret="/usr/bin/ipt2socks" ;;
 	esac
@@ -70,7 +67,7 @@ local type=$stype
 		;;
 	trojan)
 		tj_bin="/usr/bin/trojan"
-		if [ ! -f "$tj_bin" ]; then
+                                if [ ! -f "$tj_bin" ]; then
 		if [ ! -f "/tmp/trojan" ];then
 			curl -k -s -o /tmp/trojan --connect-timeout 10 --retry 3 https://cdn.jsdelivr.net/gh/chongshengB/rt-n56u/trunk/user/trojan/trojan
 			if [ ! -f "/tmp/trojan" ]; then
@@ -97,7 +94,7 @@ local type=$stype
 		;;
 	v2ray)
 		v2_bin="/usr/bin/v2ray"
-		if [ ! -f "$v2_bin" ]; then
+                                if [ ! -f "$v2_bin" ]; then
 		if [ ! -f "/tmp/v2ray" ];then
 			curl -k -s -o /tmp/v2ray --connect-timeout 10 --retry 3 https://cdn.jsdelivr.net/gh/chongshengB/rt-n56u/trunk/user/v2ray/v2ray
 			if [ ! -f "/tmp/v2ray" ]; then
@@ -437,13 +434,6 @@ start_watchcat() {
 		if [ $total_count -gt 0 ]; then
 			#param:server(count) redir_tcp(0:no,1:yes)  redir_udp tunnel kcp local gfw
 			/usr/bin/ssr-monitor $server_count $redir_tcp $redir_udp $tunnel_enable $v2ray_enable $local_enable $pdnsd_enable_flag $chinadnsng_enable_flag >/dev/null 2>&1 &
-		fi
-	fi
-	if [ $(nvram get ss_watchcat) = 1 ]; then
-		let total_count=server_count+redir_tcp+redir_udp+tunnel_enable+xray_enable+local_enable+pdnsd_enable_flag+chinadnsng_enable_flag
-		if [ $total_count -gt 0 ]; then
-			#param:server(count) redir_tcp(0:no,1:yes)  redir_udp tunnel kcp local gfw
-			/usr/bin/ssr-monitor $server_count $redir_tcp $redir_udp $tunnel_enable $xray_enable $local_enable $pdnsd_enable_flag $chinadnsng_enable_flag >/dev/null 2>&1 &
 		fi
 	fi
 }
