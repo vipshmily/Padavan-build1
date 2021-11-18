@@ -16,6 +16,8 @@ CONFIG_SOCK5_FILE=/tmp/${NAME}_s.json
 CONFIG_KUMASOCKS_FILE=/tmp/kumasocks.toml
 v2_json_file="/tmp/v2-redir.json"
 trojan_json_file="/tmp/tj-redir.json"
+v2_bin="/usr/bin/v2ray"
+tj_bin="/usr/bin/trojan"
 server_count=0
 redir_tcp=0
 v2ray_enable=0
@@ -40,8 +42,9 @@ find_bin() {
 	ssr) ret="/usr/bin/ssr-redir" ;;
 	ssr-local) ret="/usr/bin/ssr-local" ;;
 	ssr-server) ret="/usr/bin/ssr-server" ;;
-	v2ray) ret="/usr/bin/v2ray" ;;
-	trojan) ret="/usr/bin/trojan" ;;
+	v2ray) ret="$v2_bin" ;;
+	xray) ret="$v2_bin" ;;
+	trojan) ret="$tj_bin" ;;
 	socks5) ret="/usr/bin/ipt2socks" ;;
 	esac
 	echo $ret
@@ -67,23 +70,31 @@ local type=$stype
 		;;
 	trojan)
 		tj_bin="/usr/bin/trojan"
-                                if [ ! -f "$tj_bin" ]; then
-		if [ ! -f "/tmp/trojan" ];then
-			curl -k -s -o /tmp/trojan --connect-timeout 10 --retry 3 https://cdn.jsdelivr.net/gh/chongshengB/rt-n56u/trunk/user/trojan/trojan
+		if [ ! -f "$tj_bin" ]; then
+		if [ ! -f "/tmp/trojan" ]; then
+			curl -L -k -s -o /tmp/trojan --connect-timeout 10 --retry 3 https://cdn.jsdelivr.net/gh/eprea/cdn/trojan
 			if [ ! -f "/tmp/trojan" ]; then
-				logger -t "SS" "trojan二进制文件下载失败，可能是地址失效或者网络异常！"
-				nvram set ss_enable=0
-				ssp_close
+				logger -t "SS" "trojan二进制文件下载失败，可能是地址失效或者网络异常！准备切换备用下载地址！"
+				#curl -L -k -s -o /tmp/trojan --connect-timeout 10 --retry 3 https://bin.wololo.vercel.app/trojan
+				curl -L -k -s -o /tmp/trojan --connect-timeout 10 --retry 3 https://ghproxy.com/https://github.com/eprea/cdn/blob/master/trojan
+				if [ ! -f "/tmp/trojan" ]; then
+					logger -t "SS" "trojan二进制文件备用地址下载失败！请自查网络！"
+					nvram set ss_enable=0
+					ssp_close
+				else
+					logger -t "SS" "trojan二进制文件备用地址下载成功"
+					chmod -R 777 /tmp/trojan
+					tj_bin="/tmp/trojan"
+				fi
 			else
 				logger -t "SS" "trojan二进制文件下载成功"
 				chmod -R 777 /tmp/trojan
 				tj_bin="/tmp/trojan"
 			fi
-			else
-			tj_bin="/tmp/trojan"
-			fi		
+		else
+			tj_bin="/tmp/trojan"		
 		fi
-		#tj_file=$trojan_json_file
+		fi
 		if [ "$2" = "0" ]; then
 		lua /etc_ro/ss/gentrojanconfig.lua $1 nat 1080 >$trojan_json_file
 		sed -i 's/\\//g' $trojan_json_file
@@ -94,21 +105,29 @@ local type=$stype
 		;;
 	v2ray)
 		v2_bin="/usr/bin/v2ray"
-                                if [ ! -f "$v2_bin" ]; then
-		if [ ! -f "/tmp/v2ray" ];then
-			curl -k -s -o /tmp/v2ray --connect-timeout 10 --retry 3 https://cdn.jsdelivr.net/gh/chongshengB/rt-n56u/trunk/user/v2ray/v2ray
+		if [ ! -f "$v2_bin" ]; then
+		if [ ! -f "/tmp/v2ray" ]; then
+			curl -L -k -s -o /tmp/v2ray --connect-timeout 10 --retry 3 https://cdn.jsdelivr.net/gh/eprea/cdn/xray
 			if [ ! -f "/tmp/v2ray" ]; then
-				logger -t "SS" "v2ray二进制文件下载失败，可能是地址失效或者网络异常！"
-				nvram set ss_enable=0
-				ssp_close
+				logger -t "SS" "v2ray二进制文件下载失败，可能是地址失效或者网络异常！准备切换备用下载地址！"
+				curl -L -k -s -o /tmp/v2ray --connect-timeout 10 --retry 3 https://ghproxy.com/https://github.com/eprea/cdn/blob/master/xray
+				if [ ! -f "/tmp/v2ray" ]; then
+					logger -t "SS" "v2ray二进制文件备用地址下载失败！请自查网络！"
+					nvram set ss_enable=0
+					ssp_close
+				else
+					logger -t "SS" "v2ray二进制文件备用地址下载成功"
+					chmod -R 777 /tmp/v2ray
+					v2_bin="/tmp/v2ray"
+				fi
 			else
 				logger -t "SS" "v2ray二进制文件下载成功"
 				chmod -R 777 /tmp/v2ray
 				v2_bin="/tmp/v2ray"
 			fi
-			else
-			v2_bin="/tmp/v2ray"
-			fi
+		else
+				v2_bin="/tmp/v2ray"
+		fi
 		fi
 		v2ray_enable=1
 		if [ "$2" = "1" ]; then
@@ -119,6 +138,41 @@ local type=$stype
 		sed -i 's/\\//g' $v2_json_file
 		fi
 		;;
+	xray)
+		v2_bin="/usr/bin/v2ray"
+		if [ ! -f "$v2_bin" ]; then
+		if [ ! -f "/tmp/v2ray" ]; then
+			curl -L -k -s -o /tmp/v2ray --connect-timeout 10 --retry 3 https://cdn.jsdelivr.net/gh/eprea/cdn/xray
+			if [ ! -f "/tmp/v2ray" ]; then
+				logger -t "SS" "v2ray二进制文件下载失败，可能是地址失效或者网络异常！准备切换备用下载地址！"
+				curl -L -k -s -o /tmp/v2ray --connect-timeout 10 --retry 3 https://ghproxy.com/https://github.com/eprea/cdn/blob/master/xray
+				if [ ! -f "/tmp/v2ray" ]; then
+					logger -t "SS" "v2ray二进制文件备用地址下载失败！请自查网络！"
+					nvram set ss_enable=0
+					ssp_close
+				else
+					logger -t "SS" "v2ray二进制文件备用地址下载成功"
+					chmod -R 777 /tmp/v2ray
+					v2_bin="/tmp/v2ray"
+				fi
+			else
+				logger -t "SS" "v2ray二进制文件下载成功"
+				chmod -R 777 /tmp/v2ray
+				v2_bin="/tmp/v2ray"
+			fi
+		else
+				v2_bin="/tmp/v2ray"
+		fi
+		fi
+		v2ray_enable=1
+		if [ "$2" = "1" ]; then
+		lua /etc_ro/ss/genxrayconfig.lua $1 udp 1080 >/tmp/v2-ssr-reudp.json
+		sed -i 's/\\//g' /tmp/v2-ssr-reudp.json
+		else
+		lua /etc_ro/ss/genxrayconfig.lua $1 tcp 1080 >$v2_json_file
+		sed -i 's/\\//g' $v2_json_file
+		fi
+		;;	
 	esac
 }
 
@@ -245,6 +299,10 @@ start_redir_tcp() {
 		$bin -config $v2_json_file >/dev/null 2>&1 &
 		echo "$(date "+%Y-%m-%d %H:%M:%S") $($bin -version | head -1) 启动成功!" >>/tmp/ssrplus.log
 		;;
+	xray)
+		$bin -config $v2_json_file >/dev/null 2>&1 &
+		echo "$(date "+%Y-%m-%d %H:%M:%S") $($bin -version | head -1) 启动成功!" >>/tmp/ssrplus.log
+		;;	
 	socks5)
 		for i in $(seq 1 $threads); do
 		lua /etc_ro/ss/gensocks.lua $GLOBAL_SERVER 1080 >/dev/null 2>&1 &
@@ -274,6 +332,10 @@ start_redir_udp() {
 			gen_config_file $UDP_RELAY_SERVER 1
 			$bin -config /tmp/v2-ssr-reudp.json >/dev/null 2>&1 &
 			;;
+		xray)
+			gen_config_file $UDP_RELAY_SERVER 1
+			$bin -config /tmp/v2-ssr-reudp.json >/dev/null 2>&1 &
+			;;	
 		trojan)
 			gen_config_file $UDP_RELAY_SERVER 1
 			$bin --config /tmp/trojan-ssr-reudp.json >/dev/null 2>&1 &
@@ -395,6 +457,12 @@ start_local() {
 		;;
 	v2ray)
 		lua /etc_ro/ss/genv2config.lua $local_server tcp 0 $s5_port >/tmp/v2-ssr-local.json
+		sed -i 's/\\//g' /tmp/v2-ssr-local.json
+		$bin -config /tmp/v2-ssr-local.json >/dev/null 2>&1 &
+		echo "$(date "+%Y-%m-%d %H:%M:%S") Global_Socks5:$($bin -version | head -1) Started!" >>/tmp/ssrplus.log
+		;;
+	xray)
+		lua /etc_ro/ss/genxrayconfig.lua $local_server tcp 0 $s5_port >/tmp/v2-ssr-local.json
 		sed -i 's/\\//g' /tmp/v2-ssr-local.json
 		$bin -config /tmp/v2-ssr-local.json >/dev/null 2>&1 &
 		echo "$(date "+%Y-%m-%d %H:%M:%S") Global_Socks5:$($bin -version | head -1) Started!" >>/tmp/ssrplus.log
