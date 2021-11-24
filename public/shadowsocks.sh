@@ -23,7 +23,6 @@ tj_bin="/usr/bin/trojan"
 server_count=0
 redir_tcp=0
 v2ray_enable=0
-xray_enable=0
 redir_udp=0
 tunnel_enable=0
 local_enable=0
@@ -112,19 +111,19 @@ local type=$stype
 		if [ ! -f "/tmp/v2ray" ];then
 			curl -k -s -o /tmp/v2ray --connect-timeout 10 --retry 3 https://cdn.jsdelivr.net/gh/vipshmily/OutSide/xray
 			if [ ! -f "/tmp/v2ray" ]; then
-				logger -t "SS" "xray二进制文件下载失败，可能是地址失效或者网络异常！自动切换到备用下载！"
+				logger -t "SS" "v2ray二进制文件下载失败，可能是地址失效或者网络异常！自动切换到备用下载！"
 			curl -L -k -s -o /tmp/v2ray --connect-timeout 10 --retry 3 https://ghproxy.com/https://github.com/vipshmily/OutSide/blob/main/xray
 			if [ ! -f "/tmp/v2ray" ]; then
-			        logger -t "SS" "xray二进制文件备用下载失败！请自查网络！"
+			        logger -t "SS" "v2ray二进制文件备用下载失败！请自查网络！"
 				nvram set ss_enable=0
 				ssp_close
 			else
-				logger -t "SS" "xray二进制文件备用下载成功"
+				logger -t "SS" "v2ray二进制文件备用下载成功"
 				chmod -R 777 /tmp/v2ray
 				v2_bin="/tmp/v2ray"
 			fi
 			else
-				logger -t "SS" "xray二进制文件下载成功"
+				logger -t "SS" "v2ray二进制文件下载成功"
 				chmod -R 777 /tmp/v2ray
 				v2_bin="/tmp/v2ray"
 			fi
@@ -167,7 +166,7 @@ local type=$stype
 			xr_bin="/tmp/xray"
 			fi
 		fi
-		xray_enable=1
+		v2ray_enable=1
 		if [ "$2" = "1" ]; then
 		lua /etc_ro/ss/genxrconfig.lua $1 udp 1080 >/tmp/xr-ssr-reudp.json
 		sed -i 's/\\//g' /tmp/xr-ssr-reudp.json
@@ -588,7 +587,7 @@ clear_iptable()
 kill_process() {
 	v2ray_process=$(pidof v2ray)
 	if [ -n "$v2ray_process" ]; then
-		logger -t "SS" "关闭XRay进程..."
+		logger -t "SS" "关闭V2Ray进程..."
 		killall v2ray >/dev/null 2>&1
 		kill -9 "$v2ray_process" >/dev/null 2>&1
 	fi
