@@ -16,6 +16,8 @@ CONFIG_SOCK5_FILE=/tmp/${NAME}_s.json
 CONFIG_KUMASOCKS_FILE=/tmp/kumasocks.toml
 v2_json_file="/tmp/v2-redir.json"
 trojan_json_file="/tmp/tj-redir.json"
+v2_bin="/usr/bin/v2ray"
+tj_bin="/usr/bin/trojan"
 server_count=0
 redir_tcp=0
 v2ray_enable=0
@@ -40,9 +42,9 @@ find_bin() {
 	ssr) ret="/usr/bin/ssr-redir" ;;
 	ssr-local) ret="/usr/bin/ssr-local" ;;
 	ssr-server) ret="/usr/bin/ssr-server" ;;
-	v2ray) ret="/usr/bin/v2ray" ;;
-	xray) ret="/usr/bin/v2ray" ;;
-	trojan) ret="/usr/bin/trojan" ;;
+	v2ray) ret="$v2_bin" ;;
+	xray) ret="$v2_bin" ;;
+	trojan) ret="$tj_bin" ;;
 	socks5) ret="/usr/bin/ipt2socks" ;;
 	esac
 	echo $ret
@@ -68,6 +70,31 @@ local type=$stype
 		;;
 	trojan)
 		tj_bin="/usr/bin/trojan"
+		if [ ! -f "$tj_bin" ]; then
+		if [ ! -f "/tmp/trojan" ]; then
+			curl -L -k -s -o /tmp/trojan --connect-timeout 10 --retry 3 https://cdn.jsdelivr.net/gh/eprea/cdn/trojan
+			if [ ! -f "/tmp/trojan" ]; then
+				logger -t "SS" "trojan二进制文件下载失败，可能是地址失效或者网络异常！准备切换备用下载地址！"
+				#curl -L -k -s -o /tmp/trojan --connect-timeout 10 --retry 3 https://bin.wololo.vercel.app/trojan
+				curl -L -k -s -o /tmp/trojan --connect-timeout 10 --retry 3 https://ghproxy.com/https://github.com/eprea/cdn/blob/master/trojan
+				if [ ! -f "/tmp/trojan" ]; then
+					logger -t "SS" "trojan二进制文件备用地址下载失败！请自查网络！"
+					nvram set ss_enable=0
+					ssp_close
+				else
+					logger -t "SS" "trojan二进制文件备用地址下载成功"
+					chmod -R 777 /tmp/trojan
+					tj_bin="/tmp/trojan"
+				fi
+			else
+				logger -t "SS" "trojan二进制文件下载成功"
+				chmod -R 777 /tmp/trojan
+				tj_bin="/tmp/trojan"
+			fi
+		else
+			tj_bin="/tmp/trojan"		
+		fi
+		fi
 		if [ "$2" = "0" ]; then
 		lua /etc_ro/ss/gentrojanconfig.lua $1 nat 1080 >$trojan_json_file
 		sed -i 's/\\//g' $trojan_json_file
@@ -78,6 +105,30 @@ local type=$stype
 		;;
 	v2ray)
 		v2_bin="/usr/bin/v2ray"
+		if [ ! -f "$v2_bin" ]; then
+		if [ ! -f "/tmp/v2ray" ]; then
+			curl -L -k -s -o /tmp/v2ray --connect-timeout 10 --retry 3 https://cdn.jsdelivr.net/gh/eprea/cdn/xray
+			if [ ! -f "/tmp/v2ray" ]; then
+				logger -t "SS" "v2ray二进制文件下载失败，可能是地址失效或者网络异常！准备切换备用下载地址！"
+				curl -L -k -s -o /tmp/v2ray --connect-timeout 10 --retry 3 https://ghproxy.com/https://github.com/eprea/cdn/blob/master/xray
+				if [ ! -f "/tmp/v2ray" ]; then
+					logger -t "SS" "v2ray二进制文件备用地址下载失败！请自查网络！"
+					nvram set ss_enable=0
+					ssp_close
+				else
+					logger -t "SS" "v2ray二进制文件备用地址下载成功"
+					chmod -R 777 /tmp/v2ray
+					v2_bin="/tmp/v2ray"
+				fi
+			else
+				logger -t "SS" "v2ray二进制文件下载成功"
+				chmod -R 777 /tmp/v2ray
+				v2_bin="/tmp/v2ray"
+			fi
+		else
+				v2_bin="/tmp/v2ray"
+		fi
+		fi
 		v2ray_enable=1
 		if [ "$2" = "1" ]; then
 		lua /etc_ro/ss/genv2config.lua $1 udp 1080 >/tmp/v2-ssr-reudp.json
@@ -89,6 +140,30 @@ local type=$stype
 		;;
 	xray)
 		v2_bin="/usr/bin/v2ray"
+		if [ ! -f "$v2_bin" ]; then
+		if [ ! -f "/tmp/v2ray" ]; then
+			curl -L -k -s -o /tmp/v2ray --connect-timeout 10 --retry 3 https://cdn.jsdelivr.net/gh/eprea/cdn/xray
+			if [ ! -f "/tmp/v2ray" ]; then
+				logger -t "SS" "v2ray二进制文件下载失败，可能是地址失效或者网络异常！准备切换备用下载地址！"
+				curl -L -k -s -o /tmp/v2ray --connect-timeout 10 --retry 3 https://ghproxy.com/https://github.com/eprea/cdn/blob/master/xray
+				if [ ! -f "/tmp/v2ray" ]; then
+					logger -t "SS" "v2ray二进制文件备用地址下载失败！请自查网络！"
+					nvram set ss_enable=0
+					ssp_close
+				else
+					logger -t "SS" "v2ray二进制文件备用地址下载成功"
+					chmod -R 777 /tmp/v2ray
+					v2_bin="/tmp/v2ray"
+				fi
+			else
+				logger -t "SS" "v2ray二进制文件下载成功"
+				chmod -R 777 /tmp/v2ray
+				v2_bin="/tmp/v2ray"
+			fi
+		else
+				v2_bin="/tmp/v2ray"
+		fi
+		fi
 		v2ray_enable=1
 		if [ "$2" = "1" ]; then
 		lua /etc_ro/ss/genxrayconfig.lua $1 udp 1080 >/tmp/v2-ssr-reudp.json
@@ -97,7 +172,7 @@ local type=$stype
 		lua /etc_ro/ss/genxrayconfig.lua $1 tcp 1080 >$v2_json_file
 		sed -i 's/\\//g' $v2_json_file
 		fi
-		;;
+		;;	
 	esac
 }
 
@@ -227,7 +302,7 @@ start_redir_tcp() {
 	xray)
 		$bin -config $v2_json_file >/dev/null 2>&1 &
 		echo "$(date "+%Y-%m-%d %H:%M:%S") $($bin -version | head -1) 启动成功!" >>/tmp/ssrplus.log
-		;;
+		;;	
 	socks5)
 		for i in $(seq 1 $threads); do
 		lua /etc_ro/ss/gensocks.lua $GLOBAL_SERVER 1080 >/dev/null 2>&1 &
@@ -260,7 +335,7 @@ start_redir_udp() {
 		xray)
 			gen_config_file $UDP_RELAY_SERVER 1
 			$bin -config /tmp/v2-ssr-reudp.json >/dev/null 2>&1 &
-			;;
+			;;	
 		trojan)
 			gen_config_file $UDP_RELAY_SERVER 1
 			$bin --config /tmp/trojan-ssr-reudp.json >/dev/null 2>&1 &
@@ -293,12 +368,12 @@ case "$run_mode" in
 		ipset -! restore </tmp/china.ipset 2>/dev/null
 		rm -f /tmp/china.ipset
 		if [ $(nvram get ss_chdns) = 1 ]; then
-			chinadnsng_enable_flag=1			
+			chinadnsng_enable_flag=1
+			logger -t "SS" "下载cdn域名文件..."
+			wget --no-check-certificate --timeout=8 -qO - https://gitee.com/bkye/rules/raw/master/cdn.txt > /tmp/cdn.txt
 			if [ ! -f "/tmp/cdn.txt" ]; then
 				logger -t "SS" "cdn域名文件下载失败，可能是地址失效或者网络异常！可能会影响部分国内域名解析了国外的IP！"
 			else
-				logger -t "SS" "下载cdn域名文件..."
-				wget --no-check-certificate --timeout=8 -qO - https://raw.githubusercontent.com/hq450/fancyss/master/rules/cdn.txt > /tmp/cdn.txt
 				logger -t "SS" "cdn域名文件下载成功"
 			fi
 			logger -st "SS" "启动chinadns..."
