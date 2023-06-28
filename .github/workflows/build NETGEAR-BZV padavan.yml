@@ -23,12 +23,12 @@ jobs:
         key: ${{ github.event.inputs.production }}
         append-timestamp: false
     - uses: actions/setup-go@v4
-        with:
+      with:
           go-version: '1.20'
           check-latest: true
           cache: false
     - uses: actions/setup-node@v3
-        with:
+      with:
           node-version: 18
           check-latest: true
       
