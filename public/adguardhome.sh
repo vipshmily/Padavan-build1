@@ -176,6 +176,9 @@ case $1 in
 start)
 	start_adg
 	;;
+stop)
+	stop_adg
+	;;
 *)
 	echo "check"
 	;;
