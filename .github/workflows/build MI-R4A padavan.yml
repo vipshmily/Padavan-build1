@@ -80,7 +80,7 @@ jobs:
     - name: Build Firmware
       env:
         TNAME: "${{ github.event.inputs.production }}"
-        MHZ: 1300               # CPU超频频率 必须为20的倍数
+        MHZ: 1200               # CPU超频频率 必须为20的倍数
       run: |
         if [ -f public/adguardhome.Makefile ] ; then
         mv -f public/adguardhome.Makefile ${{ env.DIR }}/trunk/user/adguardhome/Makefile
