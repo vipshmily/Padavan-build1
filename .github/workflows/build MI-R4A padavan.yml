@@ -60,13 +60,7 @@ jobs:
       run: |
         sudo apt update
         sudo apt install libtool-bin gperf python3-docutils autopoint gettext ccache
-          
-    - name: Set golang
-      run: |
-        cp -f bashScripts/go.sh $(pwd)
-        sudo chmod 777 ./go.sh
-        bash ./go.sh
-        
+              
     - name: Clone source code
       run: |
         git clone --depth=1 https://github.com/vipshmily/Padavan-3.4-KVR.git ${{ env.DIR }}
