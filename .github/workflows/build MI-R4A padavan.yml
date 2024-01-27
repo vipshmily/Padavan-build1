@@ -66,8 +66,8 @@ jobs:
     - name: Clone source code
       run: |
         git clone --depth=1 https://github.com/vipshmily/Padavan-3.4-KVR.git ${{ env.DIR }}
-        cd ${{ env.DIR }}/toolchain-mipsel
-        sh dl_toolchain.sh
+        cd ${{ env.DIR }}
+        sed -i '/cp -f/d' Makefile
         mkdir -p /opt/images/
                         
     - name: Build Firmware
